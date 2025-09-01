@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crystal Realms</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="index.css" />
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.16.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="app-container">
+      <!-- Login Screen -->
+      <div id="login-screen" class="screen">
+        <div class="login-box">
+          <h1>Crystal Realms</h1>
+          <p id="login-subtitle">Your adventure awaits.</p>
+
+          <div id="continue-container" class="hidden">
+            <button id="continue-btn"></button>
+          </div>
+          
+          <p id="or-separator" class="hidden">- or -</p>
+          <p id="inactivity-message" class="hidden">Your hero was lost to the mists of time for being away for over two days. A new adventure awaits!</p>
+          
+          <div id="new-game-container">
+              <form id="login-form">
+                <input
+                  type="text"
+                  id="username-input"
+                  placeholder="Enter your hero's name"
+                  required
+                  aria-label="Hero's Name"
+                />
+                <button type="submit">Begin Adventure</button>
+              </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Screen -->
+      <div id="game-screen" class="screen">
+        <header class="game-header">
+          <div id="player-stats-wrapper">
+            <div id="player-stats" aria-live="polite">
+                <div class="stat-item">
+                <i class="fas fa-user-shield"></i>
+                <span id="player-name"></span>
+                </div>
+                <div class="stat-item">
+                <i class="fas fa-star"></i>
+                <span>Level: <span id="player-level">1</span></span>
+                </div>
+                <div class="stat-item">
+                <i class="fas fa-gem"></i>
+                <span><span id="player-diamonds">0</span></span>
+                </div>
+                <div class="stat-item health-bar-container" id="player-health-bar-container">
+                <div id="health-bar-fill"></div>
+                <span id="player-health-text">100 / 100</span>
+                </div>
+                <div class="xp-bar-container">
+                <div id="xp-bar-fill"></div>
+                <span id="player-xp-text">0 / 100 XP</span>
+                </div>
+            </div>
+            <div id="active-buffs-container"></div>
+          </div>
+          <div class="game-actions">
+            <button id="leaderboard-btn" aria-label="View Leaderboard">
+              <i class="fas fa-trophy"></i> Leaderboard
+            </button>
+            <button id="arena-btn" aria-label="Enter the Arena">
+              <i class="fas fa-shield-halved"></i> Arena
+            </button>
+            <button id="crystal-btn" aria-label="Ask the Wise Crystal">
+              <i class="fas fa-magic"></i> Ask the Crystal
+            </button>
+            <button id="shop-btn" aria-label="Open Shop">
+              <i class="fas fa-store"></i> Shop
+            </button>
+            <button id="reset-btn" class="btn-secondary" aria-label="Reset Game">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+          </div>
+        </header>
+
+        <main class="game-world">
+          <div id="portal-container">
+            <div id="portal" role="button" aria-label="Discover Portal"></div>
+            <p>Click the portal to discover riches!</p>
+          </div>
+          <div id="enemy-container" class="hidden">
+            <div id="enemy-sprite" role="button" aria-label="Attack Enemy"></div>
+            <div class="enemy-health-bar-container">
+                <div id="enemy-health-bar-fill"></div>
+            </div>
+            <p id="enemy-name">Crystal Golem</p>
+          </div>
+        </main>
+
+        <div id="notification" class="hidden" aria-live="polite"></div>
+      </div>
+
+      <!-- Shop Modal -->
+      <div id="shop-modal" class="modal-overlay hidden">
+        <div class="shop-container">
+          <div class="shop-header">
+            <h2><i class="fas fa-store"></i> Shop</h2>
+            <button id="close-shop-btn" aria-label="Close Shop">&times;</button>
+          </div>
+          <div id="shop-items-container">
+            <!-- Shop items will be dynamically inserted here -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Leaderboard Modal -->
+      <div id="leaderboard-modal" class="modal-overlay hidden">
+          <div class="leaderboard-container shop-container"> <!-- Reuse shop container style -->
+              <div class="shop-header">
+                  <h2><i class="fas fa-trophy"></i> Hall of Legends</h2>
+                  <button id="close-leaderboard-btn" aria-label="Close">&times;</button>
+              </div>
+              <div id="leaderboard-content">
+                  <p class="leaderboard-desc">Top heroes of the Crystal Realms.</p>
+                  <div id="leaderboard-list">
+                      <!-- Ranks will be inserted here -->
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- Wise Crystal Modal -->
+      <div id="crystal-modal" class="modal-overlay hidden">
+        <div class="crystal-container">
+          <div class="shop-header">
+              <h2><i class="fas fa-magic"></i> The Wise Crystal</h2>
+              <button id="close-crystal-btn" aria-label="Close">&times;</button>
+          </div>
+          <div id="crystal-content">
+              <div id="crystal-response-area">
+                  <p class="crystal-greeting">The crystal hums, awaiting your query...</p>
+              </div>
+              <form id="crystal-form">
+                  <input type="text" id="crystal-question-input" placeholder="Ask a question..." required aria-label="Your Question">
+                  <button type="submit" id="ask-crystal-btn">Ask</button>
+              </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Reward Modal -->
+      <div id="daily-reward-modal" class="modal-overlay hidden">
+        <div class="daily-reward-container">
+          <div class="shop-header">
+            <h2><i class="fas fa-calendar-check"></i> Daily Reward</h2>
+            <button id="close-daily-reward-btn" aria-label="Close">&times;</button>
+          </div>
+          <div class="daily-reward-content">
+            <p id="daily-reward-text">Welcome back, brave adventurer! Here is your reward for Day <span id="daily-reward-day">1</span>.</p>
+            <div id="daily-reward-grid">
+              <!-- Reward items will be dynamically inserted here -->
+            </div>
+            <button id="claim-reward-btn">Claim Reward</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PvP Arena Modal -->
+      <div id="pvp-modal" class="modal-overlay hidden">
+        <div class="pvp-container">
+            <div class="shop-header">
+                <h2><i class="fas fa-shield-halved"></i> The Crystal Arena</h2>
+                <button id="close-pvp-btn" aria-label="Close">&times;</button>
+            </div>
+            <div id="pvp-content">
+                <div class="pvp-combatants">
+                    <!-- Player -->
+                    <div class="pvp-combatant" id="pvp-player">
+                        <h3 id="pvp-player-name">Player</h3>
+                        <div class="pvp-health-bar-container">
+                            <div class="pvp-health-bar-fill" id="pvp-player-health-bar"></div>
+                            <span class="pvp-health-text" id="pvp-player-health-text">100/100</span>
+                        </div>
+                        <div id="pvp-player-action-display" class="pvp-action-display"></div>
+                    </div>
+                    <!-- Opponent -->
+                    <div class="pvp-combatant" id="pvp-opponent">
+                        <h3 id="pvp-opponent-name">Opponent</h3>
+                        <div class="pvp-health-bar-container">
+                            <div class="pvp-health-bar-fill" id="pvp-opponent-health-bar"></div>
+                             <span class="pvp-health-text" id="pvp-opponent-health-text">100/100</span>
+                        </div>
+                        <div id="pvp-opponent-telegraph">Next Move: <span id="pvp-opponent-next-move">...</span></div>
+                    </div>
+                </div>
+                <div id="pvp-log-container">
+                    <div id="pvp-log"></div>
+                    <div id="pvp-result-text" class="hidden"></div>
+                </div>
+                <div id="pvp-actions">
+                    <button id="pvp-attack-btn"><i class="fas fa-gavel"></i> Attack</button>
+                    <button id="pvp-block-btn"><i class="fas fa-shield-alt"></i> Block</button>
+                    <button id="pvp-heal-btn"><i class="fas fa-heart"></i> Heal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>
